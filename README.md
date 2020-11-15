@@ -26,7 +26,7 @@ CONTAINER ID        IMAGE               COMMAND                   CREATED       
 bfda118d17f1        trapper:shell       "/bin/sh -c \"./trapp…"   1 second ago        Up Less than a second                       trapper-shell
 3d873a7edb67        trapper:exec        "./trapper.sh"            1 second ago        Up Less than a second                       trapper-exec
 $ grace trapper-exec trapper-shell
-ID              IMAGE           COMMAND                         TERMINATION      EXIT CODE       DURATION 
+ID              IMAGE           COMMAND                         TERMINATION      EXIT CODE       DURATION
 3d873a7edb67    trapper:exec    ./trapper.sh                    GracefulSuccess  0                 2s/10s
 bfda118d17f1    trapper:shell   /bin/sh -c "./trapper.sh"       ForceKilled      137              10s/10s
 ```
@@ -48,7 +48,7 @@ Removing intermediate container 627b091ed3a4
 Successfully built d344d0820674
 Successfully tagged grace:latest
 $ docker run -v /var/run/docker.sock:/var/run/docker.sock -it grace:latest trapper-exec trapper-shell
-ID              IMAGE           COMMAND                         TERMINATION      EXIT CODE       DURATION 
+ID              IMAGE           COMMAND                         TERMINATION      EXIT CODE       DURATION
 3d873a7edb67    trapper:exec    ./trapper.sh                    GracefulSuccess  0                 2s/10s
 bfda118d17f1    trapper:shell   /bin/sh -c "./trapper.sh"       ForceKilled      137              10s/10s
 ```

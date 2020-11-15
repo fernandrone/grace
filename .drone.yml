@@ -18,10 +18,12 @@ steps:
     group: test
     image: fernandrone/linelint:latest
     pull: true
+    failure: ignore
 
   - name: markdown
     image: node:14.13.1
     group: test
+    failure: ignore
     commands:
       - npm install -g markdownlint-cli
       - markdownlint .
