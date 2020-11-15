@@ -1,0 +1,5 @@
+# This Dockerfile is used by the CI system.
+FROM scratch
+COPY bin/grace-linux-arm64 /grace
+COPY LICENSE README.md ./
+ENTRYPOINT ["/grace"]

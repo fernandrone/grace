@@ -1,0 +1,135 @@
+---
+kind: pipeline
+type: docker
+name: linux-amd64
+
+platform:
+  arch: amd64
+  os: linux
+
+steps:
+
+  - name: get
+    image: golang:1.14.7
+    commands:
+      - go mod download
+
+  - name: grace
+    group: test
+    image: fernandrone/grace:latest
+    pull: true
+
+  - name: markdown
+    image: node:14.13.1
+    group: test
+    commands:
+      - npm install -g markdownlint-cli
+      - markdownlint .
+
+  - name: golangci-lint
+    group: test
+    image: golangci/golangci-lint:v1.26.0
+    commands:
+      - golangci-lint run
+
+  - name: test
+    group: test
+    image: golang:1.14.7
+    commands:
+      - go test ./...
+
+  - name: build-linux-amd64
+    image: golang:1.14.7
+    commands:
+      - go build -o bin/grace-linux-amd64
+    environment:
+      GOOS: linux
+      GOARCH: amd64
+    when:
+      event: push
+
+  - name: build-all-archs
+    image: golang:1.14.7
+    commands:
+      - CGO_ENABLED=0 GOARCH=amd64 GOOS=linux    go build -ldflags="-w -s" -o bin/grace-linux-amd64
+      - CGO_ENABLED=0 GOARCH=arm64 GOOS=linux    go build -ldflags="-w -s" -o bin/grace-linux-arm64
+      - CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin   go build -ldflags="-w -s" -o bin/grace-darwin-amd64
+      - CGO_ENABLED=0 GOARCH=amd64 GOOS=windows  go build -ldflags="-w -s" -o bin/grace-windows-amd64
+    when:
+      event: tag
+
+  - name: publish-github-release
+    group: publish
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github_api_key
+      files: bin/*
+      prerelease: true
+    when:
+      event: tag
+
+  - name: publish-docker-amd64
+    group: publish
+    image: plugins/docker
+    settings:
+      auto_tag: true
+      dockerfile: .build/Dockerfile.linux.amd64
+      repo: fernandrone/grace
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+
+trigger:
+  event:
+    - push
+    - tag
+
+---
+kind: pipeline
+type: docker
+name: linux-arm64
+
+platform:
+  arch: arm64
+  os: linux
+environment:
+  GOARCH: arm64
+  GOOS: linux
+
+steps:
+  - name: get
+    image: golang:1.14.7
+    commands:
+      - go mod download
+
+  - name: test
+    image: golang:1.14.7
+    commands:
+      - go test ./...
+
+  - name: build-linux-arm64
+    image: golang:1.14.7
+    commands:
+      - go build -o bin/grace-linux-arm64
+
+  - name: publish-docker-arm64
+    image: plugins/docker
+    settings:
+      auto_tag: true
+      auto_tag_suffix: arm64
+      dockerfile: .build/Dockerfile.linux.arm64
+      repo: fernandrone/grace
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+
+trigger:
+  event:
+    - push
+    - tag
+
+depends_on:
+  - linux-amd64

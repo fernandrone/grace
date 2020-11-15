@@ -1,0 +1,5 @@
+FROM debian:stable
+
+ADD trapper.sh trapper.sh
+
+ENTRYPOINT "./trapper.sh"
