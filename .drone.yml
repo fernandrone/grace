@@ -14,9 +14,9 @@ steps:
     commands:
       - go mod download
 
-  - name: grace
+  - name: linelint
     group: test
-    image: fernandrone/grace:latest
+    image: fernandrone/linelint:latest
     pull: true
 
   - name: markdown
