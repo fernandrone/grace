@@ -1,5 +1,3 @@
-# This Dockerfile is used for testing and local development. The 'release' image
-# used by the CI system is within the '.build' directory,
 FROM golang:1.14.7
 ENV CGO_ENABLED=0 GOARCH=amd64 GOOS=linux
 WORKDIR /go/src/github.com/fernandrone/grace/

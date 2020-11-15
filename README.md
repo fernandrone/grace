@@ -1,6 +1,5 @@
 # grace
 
-![grace](https://github.com/fernandrone/grace/workflows/grace/badge.svg)
 [![Build Status](https://cloud.drone.io/api/badges/fernandrone/grace/status.svg)](https://cloud.drone.io/fernandrone/grace)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fernandrone/grace)](https://goreportcard.com/report/github.com/fernandrone/grace)
 

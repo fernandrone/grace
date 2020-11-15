@@ -20,7 +20,7 @@ const defaultStopTimeout = time.Second * time.Duration(10)
 const (
 	helpMsg = `usage of %s [CONTAINER [CONTAINER ...]]
 
-Validates simple newline and whitespace rules in all sorts of files.
+Validates if containerized applications terminate gracefully.
 
 positional arguments:
   CONTAINER		id or name of docker container
