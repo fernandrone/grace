@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/urfave/cli/v2"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -17,28 +19,38 @@ import (
 
 const defaultStopTimeout = time.Second * time.Duration(10)
 
-const (
-	helpMsg = `usage of %s [CONTAINER [CONTAINER ...]]
-
-Validates if containerized applications terminate gracefully.
-
-positional arguments:
-  CONTAINER		id or name of docker container
-`
-)
-
 type Termination int
 
 const (
+	// GracefulSuccess is ideally what you would want to see everywhere. It means that
+	// the container terminated gracefully and the exit code was zero.
 	GracefulSuccess Termination = iota
+
+	// This means that the container terminated gracefully but the exit code was not
+	// zero.
 	GracefulError
+
+	// The container did not terminate gracefully. Specifically, it failed to terminate
+	// within the allocated StopTimeout, triggering a SIGKILL by the container daemon.
 	ForceKilled
+
+	// The container did not terminate gracefully. During the shutdown it requested more
+	// memory than the limit allowed, triggering a SIGKILL by the container daemon.
 	OOMKilled
+
+	// The container did not terminate gracefully. It terminated with status code 9 or
+	// 137 (which are reserved for SIGKILL) but no OOMKILL nor timeout was detected.
+	//
+	// This should probably only happen if the main process within the container is
+	// configured to exit with one of those two status codes and this either happened by
+	// chance or as a response to the SIGTERM signal.
 	Unhandled
 )
 
 func (d Termination) String() string {
-	return [...]string{"GracefulSuccess", "GracefulError", "ForceKilled", "OOMKilled", "Unhandled"}[d]
+	return [...]string{
+		"GracefulSuccess", "GracefulError", "ForceKilled", "OOMKilled", "Unhandled",
+	}[d]
 }
 
 // Input is the main input structure to the program
@@ -61,30 +73,57 @@ type Output struct {
 }
 
 func main() {
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, helpMsg, os.Args[0])
-		flag.PrintDefaults()
+	cli.AppHelpTemplate = `{{.Description | nindent 3 | trim}}
+
+Usage:
+  {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Version}}{{if not .HideVersion}}
+
+Version:
+  {{.Version}}{{end}}{{end}}{{if .Description}}
+
+Commands:{{range .VisibleCategories}}{{if .Name}}
+  {{.Name}}:{{range .VisibleCommands}}
+    {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{else}}{{range .VisibleCommands}}
+  {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+
+Global Options:
+  {{range $index, $option := .VisibleFlags}}{{if $index}}
+  {{end}}{{$option}}{{end}}{{end}}{{if .Copyright}}
+
+Copyright:
+  {{.Copyright}}{{end}}
+`
+
+	app := &cli.App{
+		Name:        "Grace",
+		Usage:       "validates if containerized applications terminate gracefully.",
+		UsageText:   "grace [CONTAINER [CONTAINER ...]]",
+		Description: "Validates if containerized applications terminate gracefully.",
+		Action: func(c *cli.Context) error {
+			if c.NArg() == 0 {
+				cli.ShowAppHelpAndExit(c, 0)
+			}
+
+			docker, err := client.NewEnvClient()
+
+			if err != nil {
+				return err
+			}
+
+			in := Input{}
+			in.Containers = c.Args().Slice()
+			in.Docker = docker
+
+			if err := run(in, os.Stdout); err != nil {
+				return err
+			}
+
+			return nil
+		},
 	}
-	flag.Parse()
 
-	if flag.NArg() == 0 {
-		flag.Usage()
-		os.Exit(0)
-	}
-
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
-	}
-
-	in := Input{}
-	in.Containers = flag.Args()
-	in.Docker = cli
-
-	if err := run(in, os.Stdout); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
 	}
 }
 
