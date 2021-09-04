@@ -104,7 +104,7 @@ Copyright:
 				cli.ShowAppHelpAndExit(c, 0)
 			}
 
-			docker, err := client.NewEnvClient()
+			docker, err := client.NewClientWithOpts(client.FromEnv)
 
 			if err != nil {
 				return err

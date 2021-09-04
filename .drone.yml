@@ -10,31 +10,32 @@ platform:
 steps:
   - name: golangci-lint
     image: golangci/golangci-lint:v1.27.0
-    group: test
     commands:
       - golangci-lint run
 
   - name: test
     image: golang:1.17
-    group: test
     commands:
       - go test ./...
 
   - name: markdown
     image: 06kellyjac/markdownlint-cli
-    group: test
     commands:
       - markdownlint .
 
   - name: linelint
     image: fernandrone/linelint:latest
-    group: test
     pull: true
 
   - name: build
     image: golang:1.17
     commands:
       - make build
+    depends_on:
+      - golangci-lint
+      - test
+      - markdown
+      - linelint
     when:
       event: push
 
@@ -47,6 +48,11 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
+    depends_on:
+      - golangci-lint
+      - test
+      - markdown
+      - linelint
     when:
       event: tag
 
