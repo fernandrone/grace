@@ -1,4 +1,4 @@
-FROM golang:1.14.7
+FROM golang:1.17
 ENV CGO_ENABLED=0 GOARCH=amd64 GOOS=linux
 WORKDIR /go/src/github.com/fernandrone/grace/
 COPY go.mod go.sum ./

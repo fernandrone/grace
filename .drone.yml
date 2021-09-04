@@ -14,7 +14,7 @@ steps:
       - git fetch --tags
 
   - name: get
-    image: golang:1.14.7
+    image: golang:1.17
     commands:
       - go mod download
 
@@ -24,7 +24,7 @@ steps:
       - golangci-lint run
 
   - name: test
-    image: golang:1.14.7
+    image: golang:1.17
     commands:
       - go test ./...
 
@@ -38,7 +38,7 @@ steps:
     pull: true
 
   - name: build
-    image: golang:1.14.7
+    image: golang:1.17
     commands:
       - CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "-w -s"
     environment:
@@ -48,7 +48,7 @@ steps:
       event: push
       branch: main
 
-  - name: dockerhub 
+  - name: dockerhub
     image: plugins/docker
     settings:
       repo: fernandrone/grace
@@ -61,7 +61,7 @@ steps:
       event: tag
 
   - name: release
-    image: golang:1.14.7
+    image: golang:1.17
     environment:
       GITHUB_TOKEN:
         from_secret: github_token
