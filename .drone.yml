@@ -8,45 +8,35 @@ platform:
   os: linux
 
 steps:
-  - name: fetch
-    image: docker:git
-    commands:
-      - git fetch --tags
-
-  - name: get
-    image: golang:1.17
-    commands:
-      - go mod download
-
   - name: golangci-lint
-    image: golangci/golangci-lint:v1.26.0
+    image: golangci/golangci-lint:v1.27.0
+    group: test
     commands:
       - golangci-lint run
 
   - name: test
     image: golang:1.17
+    group: test
     commands:
       - go test ./...
 
   - name: markdown
     image: 06kellyjac/markdownlint-cli
+    group: test
     commands:
       - markdownlint .
 
   - name: linelint
     image: fernandrone/linelint:latest
+    group: test
     pull: true
 
   - name: build
     image: golang:1.17
     commands:
-      - CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags "-w -s"
-    environment:
-      GOOS: linux
-      GOARCH: amd64
+      - make build
     when:
       event: push
-      branch: main
 
   - name: dockerhub
     image: plugins/docker
