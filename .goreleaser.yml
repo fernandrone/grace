@@ -5,7 +5,8 @@ before:
 env:
   - CGO_ENABLED=0
 builds:
-  - goos:
+  - main: ./cmd/grace
+    goos:
       - linux
       - darwin
       - windows

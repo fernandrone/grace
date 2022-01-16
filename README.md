@@ -14,6 +14,12 @@ _Work in Progress:_
 * Docker
 * Kubernetes
 
+## Install
+
+```console
+go get github.com/fernandrone/grace/cmd/grace
+```
+
 ## Usage
 
 > This is a project in development. The instructions below are meant as documentation for the API design.
@@ -30,7 +36,7 @@ ID              IMAGE           COMMAND                         TERMINATION     
 bfda118d17f1    trapper:shell   /bin/sh -c "./trapper.sh"       ForceKilled      137              10s/10s
 ```
 
-To run from with a docker container, you will need to mount the host Docker daemon's socket:
+To run from with a docker container, you will need to mount the host's Docker daemon socket:
 
 ```console:
 $ ./hack/run-test-containers.sh
